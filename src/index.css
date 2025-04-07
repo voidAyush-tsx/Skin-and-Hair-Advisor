@@ -5,33 +5,33 @@
 
 @layer base {
   :root {
-    --background: 280 20% 98%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 210 50% 98%;
+    --foreground: 222 47% 25%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 47% 25%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222 47% 25%;
 
-    --primary: 271 70% 59%;
+    --primary: 210 100% 50%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 260 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 25%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 262 40% 92%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 40% 92%;
+    --accent-foreground: 222 47% 25%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 271 70% 59%;
+    --ring: 210 100% 50%;
 
     --radius: 0.75rem;
   }
@@ -49,7 +49,7 @@
 @layer components {
   .hero-section {
     @apply relative overflow-hidden;
-    background: linear-gradient(135deg, #D6BCFA 0%, #E5DEFF 50%, #D3E4FD 100%);
+    background: linear-gradient(135deg, #E3F2FD 0%, #F0F8FF 50%, #E1F5FE 100%);
   }
   
   .feature-card {

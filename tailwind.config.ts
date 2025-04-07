@@ -103,7 +103,7 @@ export default {
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-				'hero-pattern': 'linear-gradient(to bottom right, #D6BCFA, #E5DEFF, #D3E4FD)',
+				'hero-pattern': 'linear-gradient(to bottom right, #E1F5FE, #F0F8FF, #E3F2FD)',
 			},
 		}
 	},
