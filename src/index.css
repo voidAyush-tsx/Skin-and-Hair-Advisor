@@ -75,6 +75,8 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Premium Selection Color */
@@ -85,6 +87,18 @@
   /* Smooth Scroll Behavior */
   html {
     scroll-behavior: smooth;
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
@@ -106,6 +120,55 @@
   }
 
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-md hover:-translate-y-1;
+    @apply transition-all duration-300 ease-out hover:shadow-md hover:-translate-y-1;
+  }
+
+  /* Smooth button transitions */
+  .btn-smooth {
+    @apply transition-all duration-200 ease-out;
+    @apply active:scale-[0.98];
+  }
+
+  /* Glass morphism effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+
+  /* Focus styles for accessibility */
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+}
+
+@layer utilities {
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600;
+  }
+
+  /* Smooth image loading */
+  .img-smooth {
+    @apply transition-opacity duration-500 ease-out;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Apple-like spring timing */
+  .ease-spring {
+    transition-timing-function: cubic-bezier(0.25, 0.4, 0.25, 1);
+  }
+
+  /* Hardware acceleration for smooth animations */
+  .gpu-accelerate {
+    transform: translateZ(0);
+    will-change: transform;
   }
 }
