@@ -1,53 +1,64 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { SmoothLink } from '@/components/SmoothLink';
 import { Button } from '@/components/ui/button';
+import { Quote, Star } from 'lucide-react';
 
 const CTASection = () => {
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-r from-primary/10 via-hair-medium/10 to-primary/10">
-      <div className="container px-4 md:px-6">
-        <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
-          <div className="space-y-4">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-              Start Your Beauty Journey Today
+    <section className="py-16 md:py-24 bg-primary/5">
+      <div className="container-width px-4 md:px-6">
+        <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
+          <div className="space-y-6">
+            <h2 className="h2-title text-slate-900">
+              Ready to Transform Your Care?
             </h2>
-            
-            <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              Join thousands of happy users who have transformed their hair and skin care routine with our AI-powered recommendations.
+
+            <p className="text-lg text-slate-600 leading-relaxed">
+              Join over 10,000 patients who have improved their skin and hair health through our AI-powered diagnostic platform.
             </p>
-            
-            <div className="flex flex-col gap-2 min-[400px]:flex-row">
-              <Button asChild size="lg" className="w-full sm:w-auto">
-                <Link to="/get-started">Get Started Now</Link>
+
+            <div className="flex flex-col gap-3 min-[400px]:flex-row pt-4">
+              <Button asChild size="lg" className="h-12 px-8 bg-primary hover:bg-primary/90 shadow-md transition-all">
+                <SmoothLink to="/get-started" delay={700}>Start Free Analysis</SmoothLink>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="h-12 px-8 border-slate-300 text-slate-700 hover:bg-white">
+                <SmoothLink to="/about" delay={600}>Learn More</SmoothLink>
               </Button>
             </div>
+
+            <div className="flex items-center gap-4 pt-6 text-sm text-slate-600">
+              <div className="flex -space-x-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-8 w-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-xs font-medium text-slate-500">
+                    U{i}
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="flex">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Star key={i} className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                  ))}
+                </div>
+                <span className="font-medium text-slate-900">4.9/5 Rating</span>
+              </div>
+            </div>
           </div>
-          
-          <div className="mx-auto flex items-center justify-center lg:justify-end">
-            <div className="grid grid-cols-2 gap-4 bg-white p-6 rounded-xl shadow-lg">
-              <div className="col-span-2">
-                <h3 className="font-bold text-xl mb-2">What Our Users Say</h3>
-              </div>
-              
-              <div className="bg-secondary p-4 rounded-lg">
-                <p className="text-sm italic">"The AI analysis was spot on! It identified my skin concerns and recommended products that actually worked."</p>
-                <p className="text-sm font-medium mt-2">— Sarah T.</p>
-              </div>
-              
-              <div className="bg-secondary p-4 rounded-lg">
-                <p className="text-sm italic">"I was skeptical at first, but after following the recommended hair care routine, I've seen a huge improvement."</p>
-                <p className="text-sm font-medium mt-2">— Michael R.</p>
-              </div>
-              
-              <div className="bg-secondary p-4 rounded-lg">
-                <p className="text-sm italic">"Being able to connect with a dermatologist after my analysis was a game-changer for my skin care journey."</p>
-                <p className="text-sm font-medium mt-2">— Elena K.</p>
-              </div>
-              
-              <div className="bg-secondary p-4 rounded-lg">
-                <p className="text-sm italic">"The personalized recommendations helped me find products that work with my hair type for the first time."</p>
-                <p className="text-sm font-medium mt-2">— James L.</p>
+
+          <div className="mx-auto w-full max-w-md lg:max-w-none">
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+              <Quote className="h-10 w-10 text-primary/20 mb-6" />
+              <p className="text-lg italic mb-6 text-slate-700 leading-relaxed">
+                "The accuracy of the AI analysis was impressive. It identified my skin condition correctly before I even saw a specialist. The recommended routine has made a visible difference."
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-lg">
+                  ST
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900">Sarah Thompson</p>
+                  <p className="text-sm text-slate-500">Verified Patient</p>
+                </div>
               </div>
             </div>
           </div>

@@ -96,26 +96,26 @@ const ConnectDoctor = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
-  
+
   const filteredDoctors = doctors.filter(doctor => {
-    const matchesSearch = searchTerm === '' || 
+    const matchesSearch = searchTerm === '' ||
       doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doctor.expertise.some(e => e.toLowerCase().includes(searchTerm.toLowerCase())) ||
       doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doctor.location.toLowerCase().includes(searchTerm.toLowerCase());
-      
-    const matchesSpecialty = selectedSpecialty === null || 
+
+    const matchesSpecialty = selectedSpecialty === null ||
       doctor.specialty === selectedSpecialty;
-      
+
     return matchesSearch && matchesSpecialty;
   });
-  
+
   const specialties = Array.from(new Set(doctors.map(doctor => doctor.specialty)));
-  
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background font-sans selection:bg-primary/20 animate-fade-in-up">
       <Header />
-      
+
       <main className="flex-1 py-16 md:py-24">
         <div className="container px-4 md:px-6">
           <div className="max-w-5xl mx-auto">
@@ -127,19 +127,19 @@ const ConnectDoctor = () => {
                 Find and consult with top dermatologists and hair specialists personalized to your needs
               </p>
             </div>
-            
+
             <div className="mb-8">
               <div className="flex flex-col md:flex-row gap-4 mb-6">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search doctors, specialties, or conditions..." 
+                  <Input
+                    placeholder="Search doctors, specialties, or conditions..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-9"
                   />
                 </div>
-                
+
                 <div className="flex gap-2">
                   <Button variant="outline" className="inline-flex items-center gap-1">
                     <Map className="h-4 w-4" />
@@ -151,19 +151,19 @@ const ConnectDoctor = () => {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
-                <Button 
-                  variant={selectedSpecialty === null ? "default" : "outline"} 
+                <Button
+                  variant={selectedSpecialty === null ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedSpecialty(null)}
                 >
                   All Specialists
                 </Button>
                 {specialties.map(specialty => (
-                  <Button 
-                    key={specialty} 
-                    variant={selectedSpecialty === specialty ? "default" : "outline"} 
+                  <Button
+                    key={specialty}
+                    variant={selectedSpecialty === specialty ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSelectedSpecialty(specialty)}
                   >
@@ -171,7 +171,7 @@ const ConnectDoctor = () => {
                   </Button>
                 ))}
               </div>
-              
+
               <Tabs defaultValue="grid" className="w-full">
                 <div className="flex justify-end mb-4">
                   <TabsList>
@@ -197,17 +197,17 @@ const ConnectDoctor = () => {
                     </TabsTrigger>
                   </TabsList>
                 </div>
-                
+
                 <TabsContent value="grid">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredDoctors.map(doctor => (
                       <Card key={doctor.id} className="overflow-hidden h-full">
                         <div className="aspect-video relative">
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                          <img 
-                            src={doctor.image} 
-                            alt={doctor.name} 
-                            className="w-full h-full object-cover" 
+                          <img
+                            src={doctor.image}
+                            alt={doctor.name}
+                            className="w-full h-full object-cover"
                           />
                           <div className="absolute bottom-4 left-4 flex items-center space-x-2">
                             <Avatar className="h-10 w-10 border-2 border-white">
@@ -220,7 +220,7 @@ const ConnectDoctor = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         <CardContent className="p-6">
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center">
@@ -232,23 +232,23 @@ const ConnectDoctor = () => {
                               Available {doctor.availability}
                             </Badge>
                           </div>
-                          
+
                           <p className="text-sm text-muted-foreground mb-4">
                             {doctor.bio}
                           </p>
-                          
+
                           <h3 className="font-bold mb-2 text-sm">Expertise</h3>
                           <div className="flex flex-wrap gap-2 mb-4">
                             {doctor.expertise.map(skill => (
                               <Badge key={skill} variant="outline">{skill}</Badge>
                             ))}
                           </div>
-                          
+
                           <div className="text-sm flex items-center text-muted-foreground mb-4">
                             <Map className="h-4 w-4 mr-1" />
                             {doctor.location}
                           </div>
-                          
+
                           <div className="grid grid-cols-2 gap-3 mt-4">
                             <Button variant="outline" size="sm" className="w-full">
                               <Calendar className="h-4 w-4 mr-2" />
@@ -264,7 +264,7 @@ const ConnectDoctor = () => {
                     ))}
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value="list">
                   <div className="space-y-4">
                     {filteredDoctors.map(doctor => (
@@ -277,31 +277,31 @@ const ConnectDoctor = () => {
                                 <AvatarFallback>{doctor.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                               </Avatar>
                             </div>
-                            
+
                             <div className="flex-1 space-y-3">
                               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                                 <div>
                                   <h3 className="font-bold text-lg">{doctor.name}</h3>
                                   <p className="text-muted-foreground">{doctor.specialty}</p>
                                 </div>
-                                
+
                                 <div className="flex items-center mt-2 md:mt-0">
                                   <Star className="h-4 w-4 text-yellow-500 mr-1 fill-yellow-500" />
                                   <span className="font-medium">{doctor.rating}</span>
                                   <span className="text-muted-foreground text-sm ml-1">({doctor.reviews} reviews)</span>
                                 </div>
                               </div>
-                              
+
                               <p className="text-sm text-muted-foreground">
                                 {doctor.bio}
                               </p>
-                              
+
                               <div className="flex flex-wrap gap-2">
                                 {doctor.expertise.map(skill => (
                                   <Badge key={skill} variant="outline">{skill}</Badge>
                                 ))}
                               </div>
-                              
+
                               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                 <div className="flex items-center">
                                   <Map className="h-4 w-4 mr-1 text-muted-foreground" />
@@ -310,7 +310,7 @@ const ConnectDoctor = () => {
                                     Available {doctor.availability}
                                   </Badge>
                                 </div>
-                                
+
                                 <div className="flex gap-3">
                                   <Button variant="outline" size="sm">
                                     <Calendar className="h-4 w-4 mr-2" />
@@ -334,7 +334,7 @@ const ConnectDoctor = () => {
           </div>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );

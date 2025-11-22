@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
@@ -11,15 +10,27 @@ import Footer from '@/components/Footer';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background font-sans selection:bg-primary/20 animate-fade-in-up">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 w-full">
         <Hero />
-        <FeatureSection />
-        <HowItWorks />
-        <AnalysisDemo />
-        <DoctorConnectSection />
-        <CTASection />
+        <div className="space-y-24 pb-24">
+          <div>
+            <FeatureSection />
+          </div>
+          <div>
+            <HowItWorks />
+          </div>
+          <div>
+            <AnalysisDemo />
+          </div>
+          <div>
+            <DoctorConnectSection />
+          </div>
+          <div>
+            <CTASection />
+          </div>
+        </div>
       </main>
       <Footer />
     </div>

@@ -32,7 +32,7 @@ router.post('/analyze', upload.single('image'), async (req: Request, res: Respon
             return;
         }
 
-        const analysisType = req.query.type as string || 'skin';
+        const analysisType = (req.query.type as string || 'skin').toLowerCase();
         if (!['skin', 'hair'].includes(analysisType)) {
             res.status(400).json({ success: false, error: 'Invalid analysis type. Use "skin" or "hair"' });
             return;
@@ -51,145 +51,129 @@ router.post('/analyze', upload.single('image'), async (req: Request, res: Respon
         const base64Image = `data:${mimeType};base64,${imageBase64}`;
 
         console.log(`Processing ${mimeType} image of size ${req.file.size} bytes`);
-        console.log(`Base64 image string length: ${base64Image.length}`);
 
-        if (!process.env.OPENROUTER_API_KEY) {
+        // Check for API key (OpenRouter or Gemini)
+        const rawApiKey = process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY;
+
+        if (!rawApiKey) {
             console.error("Missing API key");
             res.status(500).json({ success: false, error: 'Server configuration error: Missing API key' });
             return;
         }
 
-        // Create a stronger, more directive prompt
-        const prompt = `
-Please analyze this image thoroughly for ${analysisType} features.
-YOU MUST provide a specific analysis of what you see in THIS image, not a general framework.
+        const apiKey = rawApiKey.trim();
 
-Return a structured report with EXACTLY the following format:
+        // Construct the prompt based on analysis type
+        const systemPrompt = `You are an expert dermatologist and trichologist AI assistant. 
+        Your task is to analyze images of skin or hair and provide a detailed, clinical-grade assessment in STRICT JSON format.
+        Do not include any conversational text, markdown formatting (like \`\`\`json), or explanations outside the JSON object.
+        If the image is not suitable for analysis (blurry, not skin/hair, too dark), return a JSON with an "error" field explaining why.`;
 
-${analysisType === 'skin' ?
-            `Skin Type: [specific type - normal, dry, oily, combination, sensitive]
-Hydration Level: [specific level - low, medium, high, etc.]
-Sensitivity: [specific level - low, medium, high]
-UV Damage: [specific assessment - none, minimal, moderate, severe]
-Concerns:
-- [specific concern 1 seen in THIS image]
-- [specific concern 2 seen in THIS image]
-- [specific concern 3 seen in THIS image]` :
-            `Hair Type: [specific type - straight, wavy, curly, coily, etc.]
-Texture: [description of hair texture]
-Density: [specific description - thin, medium, thick]
-Porosity: [specific level - low, medium, high]
-Damage Level: [level of damage observed]
-Scalp Condition: [description of scalp condition]
-Concerns:
-- [specific concern 1 seen in THIS image]
-- [specific concern 2 seen in THIS image]
-- [specific concern 3 seen in THIS image]`}
+        const userPrompt = analysisType === 'skin'
+            ? `Analyze this image for SKIN health. Return a valid JSON object with this exact structure:
+            {
+                "skinType": "one of: Normal, Dry, Oily, Combination, Sensitive",
+                "hydrationLevel": "one of: Dehydrated, Balanced, Well-hydrated",
+                "sensitivity": "one of: Low, Moderate, High",
+                "uvDamage": "one of: None, Minimal, Moderate, Severe",
+                "concerns": ["array", "of", "specific", "concerns", "detected"],
+                "recommendations": [
+                    { "type": "Cleansing", "description": "Specific advice..." },
+                    { "type": "Moisturizing", "description": "Specific advice..." },
+                    { "type": "Treatment", "description": "Specific advice..." },
+                    { "type": "Protection", "description": "Specific advice..." }
+                ]
+            }`
+            : `Analyze this image for HAIR and SCALP health. Return a valid JSON object with this exact structure:
+            {
+                "hairType": "one of: Straight, Wavy, Curly, Coily",
+                "texture": "one of: Fine, Medium, Coarse",
+                "density": "one of: Thin, Medium, Thick",
+                "porosity": "one of: Low, Medium, High",
+                "damageLevel": "one of: Healthy, Minimal Damage, Moderate Damage, Severe Damage",
+                "scalpCondition": "one of: Healthy, Dry/Flaky, Oily, Inflamed",
+                "concerns": ["array", "of", "specific", "concerns", "detected"],
+                "recommendations": [
+                    { "type": "Cleansing", "description": "Specific advice..." },
+                    { "type": "Conditioning", "description": "Specific advice..." },
+                    { "type": "Treatment", "description": "Specific advice..." },
+                    { "type": "Styling", "description": "Specific advice..." }
+                ]
+            }`;
 
-Recommendations:
-Cleansing - [specific product types and ingredients for THIS person]
-Moisturizing - [specific product types and ingredients for THIS person]
-Treatment - [specific product types and ingredients for THIS person]
-Protection - [specific advice for THIS person]
-
-DO NOT explain your limitations or that you cannot see the image. Analyze the image directly and provide specific insights. DO NOT provide a theoretical framework or explain how analysis works. Only provide the actual analysis.
-`;
-
-        // OpenRouter endpoint
+        // OpenRouter endpoint configuration
         const apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
-        // Try a more reliable vision model
+        // Use a model capable of vision and JSON instruction following
         const requestBody = {
-            model: "openrouter/sonoma-sky-alpha", // Better vision model
+            model: "x-ai/grok-4.1-fast:free", // Fast, capable vision model
             messages: [
+                {
+                    role: "system",
+                    content: systemPrompt
+                },
                 {
                     role: "user",
                     content: [
-                        { type: "text", text: prompt },
+                        { type: "text", text: userPrompt },
                         {
                             type: "image_url",
                             image_url: {
-                                url: base64Image,
-                                detail: "high"
+                                url: base64Image
                             }
                         }
                     ]
                 }
             ],
-            max_tokens: 800
+            temperature: 0.2, // Low temperature for consistent JSON
+            response_format: { type: "json_object" }, // Request JSON mode if supported
+            reasoning: { enabled: true } // Enable reasoning as requested
         };
 
         console.log("Sending request to LLM API...");
         console.log("Request model:", requestBody.model);
         console.log("API URL:", apiUrl);
 
-        // Make the request
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json',
                 'HTTP-Referer': 'http://localhost:3001',
-                'X-Title': 'Beauty Analysis App'
+                'X-Title': 'Skin & Hair Advisor'
             },
             body: JSON.stringify(requestBody)
         });
 
-        console.log("Response status:", response.status);
-
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('OpenRouter API error:', errorText);
-
-            let errorMessage = 'Analysis service error';
-            try {
-                const errorData = JSON.parse(errorText);
-                errorMessage = errorData?.error?.message || errorData?.message || 'Unknown API error';
-                console.error('Parsed error:', errorData);
-            } catch (e) {
-                errorMessage = errorText || response.statusText;
-            }
-
-            res.status(200).json({
-                success: false,
-                error: errorMessage
-            });
-            return;
+            console.error('API error:', errorText);
+            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
         console.log("API response received");
 
-        // Validate that the response is an actual analysis
-        const processedData = processGeminiResponse(data, analysisType);
+        const content = data.choices?.[0]?.message?.content || '';
 
-        // Check if we got a theoretical response instead of analysis
-        const content = data.choices?.[0]?.message?.content || data.choices?.[0]?.text || '';
-        if (content.toLowerCase().includes("cannot analyze") ||
-            content.toLowerCase().includes("cannot process") ||
-            content.toLowerCase().includes("limitations") ||
-            content.toLowerCase().includes("framework for") ||
-            content.toLowerCase().includes("data limitations")) {
+        // Parse the JSON response
+        let analysisResult;
+        try {
+            // Clean up any potential markdown code blocks if the model ignored instructions
+            const jsonString = content.replace(/```json\n?|\n?```/g, '').trim();
+            analysisResult = JSON.parse(jsonString);
+        } catch (e) {
+            console.error("Failed to parse JSON response:", content);
+            throw new Error("AI returned invalid data format");
+        }
 
-            res.status(200).json({
-                success: false,
-                error: "The AI couldn't analyze this image properly. Please try again with a clearer image.",
-                data: {}
-            });
+        // Check for error in the AI response
+        if (analysisResult.error) {
+            res.status(200).json({ success: false, error: analysisResult.error });
             return;
         }
 
-        // Check if we have error in processed data
-        if ('error' in processedData) {
-            res.status(200).json({
-                success: false,
-                error: processedData.error,
-                data: {} // Return empty data object
-            });
-            return;
-        }
-
-        res.status(200).json({ success: true, data: processedData });
+        res.status(200).json({ success: true, data: analysisResult });
 
     } catch (error) {
         console.error('Analysis error:', error);
@@ -200,251 +184,67 @@ DO NOT explain your limitations or that you cannot see the image. Analyze the im
     }
 });
 
-function processGeminiResponse(rawResponse: ApiResponse, analysisType: string) {
+router.post('/chat', async (req: Request, res: Response) => {
     try {
-        // Handle different response formats from OpenRouter
-        let content = rawResponse.choices?.[0]?.message?.content ||
-            rawResponse.choices?.[0]?.text ||
-            '';
+        const { messages, context } = req.body;
 
-        console.log("Extracted content:", content);
-
-        // Filter out the thinking sections
-        content = removeThinkingSections(content);
-
-        // Clean up markdown formatting
-        content = cleanMarkdownFormatting(content);
-
-        console.log("Content after cleaning:", content);
-
-        // Add this check for empty responses
-        if (!content || content.trim() === '') {
-            console.error("API returned empty content");
-            return {
-                error: "The analysis service couldn't process this image. Please try a clearer image or a different image."
-            };
+        if (!messages || !Array.isArray(messages)) {
+            res.status(400).json({ success: false, error: 'Invalid messages format' });
+            return;
         }
 
-        if (analysisType === 'skin') {
-            return {
-                skinType: extractFromText(content, 'skin type'),
-                hydrationLevel: extractFromText(content, 'hydration level'),
-                sensitivity: extractFromText(content, 'sensitivity'),
-                uvDamage: extractFromText(content, 'uv damage'),
-                concerns: extractListFromText(content, 'concerns'),
-                recommendations: extractRecommendationsFromText(content)
-            };
-        } else {
-            return {
-                hairType: extractFromText(content, 'hair type'),
-                texture: extractFromText(content, 'texture'),
-                density: extractFromText(content, 'density'),
-                porosity: extractFromText(content, 'porosity'),
-                damageLevel: extractFromText(content, 'damage level'),
-                scalpCondition: extractFromText(content, 'scalp condition'),
-                concerns: extractListFromText(content, 'concerns detected') || extractListFromText(content, 'concerns'),
-                recommendations: extractRecommendationsFromText(content)
-            };
+        const apiKey = process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            res.status(500).json({ success: false, error: 'Server configuration error' });
+            return;
         }
+
+        // Construct a system prompt that includes the analysis context
+        const systemPrompt = `You are Dr. AI, an expert dermatologist and trichologist assistant.
+        
+        CONTEXT FROM ANALYSIS:
+        ${JSON.stringify(context, null, 2)}
+        
+        Your goal is to answer the user's follow-up questions based on this analysis.
+        - Be empathetic, professional, and clear.
+        - Use the specific data points from the analysis (e.g., "As I mentioned, your hydration is low...").
+        - Do not give medical prescriptions, but suggest over-the-counter ingredients.
+        - Keep answers concise (under 3 paragraphs).`;
+
+        const apiMessages = [
+            { role: "system", content: systemPrompt },
+            ...messages
+        ];
+
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey.trim()}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'http://localhost:3001',
+                'X-Title': 'Skin & Hair Advisor'
+            },
+            body: JSON.stringify({
+                model: "x-ai/grok-4.1-fast:free",
+                messages: apiMessages,
+                temperature: 0.7, // Slightly higher for natural conversation
+                reasoning: { enabled: true }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const reply = data.choices?.[0]?.message?.content || "I apologize, I couldn't generate a response.";
+
+        res.json({ success: true, reply });
+
     } catch (error) {
-        console.error("Error processing AI response:", error);
-        return {
-            error: "Failed to process the analysis result. Please try again."
-        };
+        console.error('Chat error:', error);
+        res.status(500).json({ success: false, error: 'Failed to process chat' });
     }
-}
-
-// Function to clean markdown formatting from model responses
-function cleanMarkdownFormatting(text: string): string {
-    return text
-        .replace(/^#{1,6}\s+/gm, '')           // Remove headings at line beginnings
-        .replace(/\n#{1,6}\s+/gm, '\n')        // Remove headings after newlines
-        .replace(/\n###\s+/gm, '\n')           // Remove ### specifically (for recommendations)
-        .replace(/^\s*\*\*([^*]+)\*\*:/gm, '$1:') // Replace bold text in property names
-        .trim();
-}
-
-// Function to remove thinking sections from model responses
-function removeThinkingSections(text: string): string {
-    // Different models might use slightly different formats for thinking sections
-    const thinkingPatterns = [
-        /◁think▷[\s\S]*?◁\/think▷/g,  // Moonshot AI Kimi format
-        /<thinking>[\s\S]*?<\/thinking>/g,  // Alternative format
-        /\[thinking\][\s\S]*?\[\/thinking\]/g  // Another possible format
-    ];
-
-    let result = text;
-    for (const pattern of thinkingPatterns) {
-        result = result.replace(pattern, '');
-    }
-
-    return result.trim();
-}
-
-function extractFromText(text: string, feature: string): string {
-    try {
-        const lowerText = text.toLowerCase();
-        const lowerFeature = feature.toLowerCase();
-
-        if (lowerText.includes(lowerFeature)) {
-            const index = lowerText.indexOf(lowerFeature);
-            const endOfLine = lowerText.indexOf('\n', index);
-            const segment = text.substring(index, endOfLine > 0 ? endOfLine : undefined);
-
-            const parts = segment.split(':');
-            if (parts.length >= 2) {
-                return parts[1].trim();
-            }
-        }
-
-        return 'Not analyzed';
-    } catch (error) {
-        console.error(`Error extracting ${feature}:`, error);
-        return 'Not analyzed';
-    }
-}
-
-function extractListFromText(text: string, listName: string): string[] {
-    try {
-        const lowerText = text.toLowerCase();
-        const startIndex = lowerText.indexOf(listName.toLowerCase());
-
-        if (startIndex >= 0) {
-            const followingText = text.substring(startIndex);
-            const lines = followingText.split('\n').slice(1, 6);  // Get next 5 lines after the heading
-
-            return lines
-                .map(line => line.trim())
-                .filter(line => line.startsWith('-') || line.startsWith('•') || line.startsWith('*'))
-                .map(line => {
-                    // Handle different bullet point styles
-                    if (line.startsWith('-')) return line.substring(1).trim();
-                    if (line.startsWith('•')) return line.substring(1).trim();
-                    if (line.startsWith('*')) return line.substring(1).trim();
-                    return line;
-                })
-                .filter(Boolean);
-        }
-
-        return [];
-    } catch (error) {
-        console.error(`Error extracting list ${listName}:`, error);
-        return [];
-    }
-}
-
-function extractRecommendationsFromText(text: string): {type: string, description: string}[] {
-    try {
-        const recommendations = [];
-        const recommendationIndex = text.toLowerCase().indexOf('recommendation');
-
-        if (recommendationIndex === -1) {
-            return [];
-        }
-
-        const recommendationSection = text.substring(recommendationIndex);
-        const lines = recommendationSection.split('\n');
-
-        let currentType = '';
-        let currentDesc = '';
-
-        // Process recommendation section line by line
-        for (let i = 0; i < lines.length; i++) {
-            const trimmed = lines[i].trim();
-            if (!trimmed) continue;
-
-            // Skip header lines
-            if (trimmed.toLowerCase() === 'recommendations:' ||
-                trimmed.toLowerCase() === 'recommendation:' ||
-                trimmed.toLowerCase() === 'recommended routine') {
-                continue;
-            }
-
-            // Check for "Category - Description" format
-            if (trimmed.includes(' - ')) {
-                // Add previous recommendation if exists
-                if (currentType && currentDesc) {
-                    recommendations.push({ type: currentType, description: currentDesc });
-                    currentType = '';
-                    currentDesc = '';
-                }
-
-                const parts = trimmed.split(' - ');
-                if (parts.length >= 2) {
-                    currentType = parts[0].trim();
-                    currentDesc = parts[1].trim();
-                    recommendations.push({ type: currentType, description: currentDesc });
-                    currentType = '';
-                    currentDesc = '';
-                }
-                continue;
-            }
-
-            // Check for standalone category headers like "Cleansing:", "Moisturizing:", etc.
-            const categories = ['cleansing', 'moisturizing', 'treatment', 'protection'];
-            const isCategory = categories.some(cat =>
-                trimmed.toLowerCase() === cat ||
-                trimmed.toLowerCase() === cat + ':' ||
-                trimmed.toLowerCase().startsWith(cat + ' '));
-
-            if (isCategory || trimmed.endsWith(':')) {
-                // Add previous recommendation if exists
-                if (currentType && currentDesc) {
-                    recommendations.push({ type: currentType, description: currentDesc });
-                }
-
-                // Set new category
-                currentType = trimmed.endsWith(':') ? trimmed.slice(0, -1).trim() : trimmed;
-                currentDesc = '';
-
-                // Get the next paragraphs until next category
-                let j = i + 1;
-                const nextDesc = [];
-
-                while (j < lines.length) {
-                    const nextLine = lines[j].trim();
-                    if (!nextLine) {
-                        j++;
-                        continue;
-                    }
-
-                    // Stop if we hit another category
-                    if (categories.some(cat =>
-                            nextLine.toLowerCase() === cat ||
-                            nextLine.toLowerCase() === cat + ':' ||
-                            nextLine.toLowerCase().startsWith(cat + ' ')) ||
-                        nextLine.endsWith(':')) {
-                        break;
-                    }
-
-                    nextDesc.push(nextLine);
-                    j++;
-                }
-
-                if (nextDesc.length > 0) {
-                    currentDesc = nextDesc.join(' ');
-                    i = j - 1; // Skip ahead to where we stopped
-                }
-
-                continue;
-            }
-
-            // If we have a current type but still collecting description
-            if (currentType && !categories.includes(currentType.toLowerCase())) {
-                currentDesc += (currentDesc ? ' ' : '') + trimmed;
-            }
-        }
-
-        // Add the last recommendation if it exists
-        if (currentType && currentDesc) {
-            recommendations.push({ type: currentType, description: currentDesc });
-        }
-
-        return recommendations;
-    } catch (error) {
-        console.error('Error extracting recommendations:', error);
-        return [];
-    }
-}
+});
 
 export default router;
