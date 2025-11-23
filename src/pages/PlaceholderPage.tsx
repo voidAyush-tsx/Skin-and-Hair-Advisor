@@ -1,8 +1,6 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import { Construction } from 'lucide-react';
 
 const PlaceholderPage = () => {
@@ -11,8 +9,6 @@ const PlaceholderPage = () => {
 
     return (
         <div className="min-h-screen flex flex-col bg-slate-50">
-            <Header />
-
             <main className="flex-1 flex flex-col items-center justify-center py-24 px-4 text-center">
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full">
                     <div className="bg-primary/10 p-4 rounded-full inline-flex mb-6">
@@ -33,8 +29,6 @@ const PlaceholderPage = () => {
                     </Button>
                 </div>
             </main>
-
-            <Footer />
         </div>
     );
 };

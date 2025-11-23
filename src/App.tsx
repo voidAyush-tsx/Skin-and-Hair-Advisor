@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -15,6 +14,8 @@ import NotFound from "./pages/NotFound";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import ScrollToTop from "./components/ScrollToTop";
 import PageTransition from "./components/PageTransition";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
+          <Header />
           <PageTransition>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -46,6 +48,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PageTransition>
+          <Footer />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

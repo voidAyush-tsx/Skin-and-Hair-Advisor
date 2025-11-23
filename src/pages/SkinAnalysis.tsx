@@ -1,7 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useToast } from "@/components/ui/use-toast";
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -161,8 +159,7 @@ const SkinAnalysis = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 animate-fade-in-up">
-      <Header />
-
+      {/* Header rendered globally */}
       <main className="flex-1 py-12 md:py-20">
         <div className="container-width px-4 md:px-6">
           <div className="grid lg:grid-cols-12 gap-12 items-start">
@@ -491,7 +488,7 @@ const SkinAnalysis = () => {
         />
       )}
 
-      <Footer />
+      {/* Footer rendered globally */}
     </div>
   );
 };
